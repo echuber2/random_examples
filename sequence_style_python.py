@@ -63,6 +63,8 @@ def whi(cond_lambda, body_lambda):
     result = body_lambda()
   return result
 
+# EXAMPLES
+
 # Note: One fun side effect of writing this way, is your whitespace on the
 # left doesn't seem to matter much. Tabless Python?
 seq(pipe(10), whi(
@@ -80,8 +82,10 @@ seq(print('Math lesson:'), cond(2+2==4), branch(
 
 # Here I define variables x, y, and z in the middle of the call. If you
 # have a linter or IDE, it will complain, but this still works!
-seq(print('Setting x to 7'), let('x', 7), print('Setting y to 9'),
+# (Also, all of this is in a lambda, which was originally the point.)
+foo = lambda: seq(print('Setting x to 7'), let('x', 7), print('Setting y to 9'),
   let('y',9), print('Setting z to the sum'), let('z',x+y),
   print('Value of z:', z))
 
+foo()
 
