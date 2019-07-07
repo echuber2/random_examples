@@ -84,10 +84,12 @@ y = None # optional
 z = None # optional
 i = None # optional
 
-# Note: One fun side effect of writing this way, is your whitespace on the
-# left doesn't seem to matter much. Tabless Python?
-seq(print('Example with a while loop: Counting down from 10...'),
-  pipe(10),
+# Note: One fun side effect of writing this way is that the whitespace on
+# the left doesn't matter as long as you're still listing arguments to seq().
+# This allows a more flexible indentation style than usual.
+seq(
+  pipe(5),
+  print('Example with a while loop: Counting down from', pipe(), '...'),
   whi(
       lambda: pipe() > 0,
       lambda: seq(
@@ -122,30 +124,29 @@ let_test = lambda: seq(
 _ = let_test()
 
 letkey_test = lambda: seq(
-   let('x', {}),
-   letkey('x','y','Success!'),
-   print('Testing letkey:', x['y'], '\n')
- )
+  let('x', {}),
+  letkey('x','y','Success!'),
+  print('Testing letkey:', x['y'], '\n')
+)
 _ = letkey_test()
 
 letind_test = lambda: seq(
-   let('x', [0,0,0]),
-   # Instead of making an iteration variable 'i' here and adding junk
-   # to the global namespace, you could also just use the pipe variable.
-   let('i', 0),
-   whi(lambda: i < len(x), lambda: seq(
-       letind('x', i, 7),
-       let('i', i+1)
-     )
-   ),
-   pipe('Testing letind:'),
-   cond(x == [7,7,7]),
-   branch(
-     lambda: print(pipe(), 'Success!'),
-     lambda: print(pipe(), 'Failure!')
-   ),
-   print()
+ let('x', [0,0,0]),
+ # Instead of making an iteration variable 'i' here and adding junk
+ # to the global namespace, you could also just use the pipe variable.
+ let('i', 0),
+ whi(lambda: i < len(x), lambda: seq(
+     letind('x', i, 7),
+     let('i', i+1)
+   )
+ ),
+ pipe('Testing letind:'),
+ cond(x == [7,7,7]),
+ branch(
+   lambda: print(pipe(), 'Success!\n'),
+   lambda: print(pipe(), 'Failure!\n')
  )
+)
 _ = letind_test()
 
 # You can define a class in the seq format using the built-in Python
@@ -160,9 +161,8 @@ letattr_test = lambda: seq(
   pipe('Testing letattr:'),
   cond(x.color == 'green'),
   branch(
-    lambda: print(pipe(), 'Success!'),
-    lambda: print(pipe(), 'Failure!')
-  ),
-  print()
+    lambda: print(pipe(), 'Success!\n'),
+    lambda: print(pipe(), 'Failure!\n')
+  )
 )
 _ = letattr_test()
