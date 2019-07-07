@@ -21,9 +21,9 @@ _cond_ = None
 def let(var_name_string, val):
   globals()[var_name_string] = val
 
-# letkey('x', 'y', 3) sets the global x[y] to 3
-def letkey(var_name_string, key_name_string, val):
-  globals()[var_name_string][key_name_string] = val
+# letkey('x', 'foo', 3) sets the global x['foo'] to 3
+def letkey(var_name_string, key, val):
+  globals()[var_name_string][key] = val
 
 # letind('mylist', 1, 7) sets mylist[1] to 7.
 # The second parameter should be a list index integer. This is actually
@@ -118,8 +118,8 @@ _ = foo()
 # Some unit tests that also show example usage:
 
 let_test = lambda: seq(
-   let('x','Success!'),
-   print('Testing let:', x, '\n')
+  let('x','Success!'),
+  print('Testing let:', x, '\n')
 )
 _ = let_test()
 
@@ -131,21 +131,21 @@ letkey_test = lambda: seq(
 _ = letkey_test()
 
 letind_test = lambda: seq(
- let('x', [0,0,0]),
- # Instead of making an iteration variable 'i' here and adding junk
- # to the global namespace, you could also just use the pipe variable.
- let('i', 0),
- whi(lambda: i < len(x), lambda: seq(
-     letind('x', i, 7),
-     let('i', i+1)
-   )
- ),
- pipe('Testing letind:'),
- cond(x == [7,7,7]),
- branch(
-   lambda: print(pipe(), 'Success!\n'),
-   lambda: print(pipe(), 'Failure!\n')
- )
+  let('x', [0,0,0]),
+  # Instead of making an iteration variable 'i' here and adding junk
+  # to the global namespace, you could also just use the pipe variable.
+  let('i', 0),
+  whi(lambda: i < len(x), lambda: seq(
+      letind('x', i, 7),
+      let('i', i+1)
+    )
+  ),
+  pipe('Testing letind:'),
+  cond(x == [7,7,7]),
+  branch(
+    lambda: print(pipe(), 'Success!\n'),
+    lambda: print(pipe(), 'Failure!\n')
+  )
 )
 _ = letind_test()
 
@@ -153,7 +153,7 @@ _ = letind_test()
 # functions, but it's a pain.
 class Car:
   def __init__(self):
-    color = 'blue'
+    self.color = 'blue'
 
 letattr_test = lambda: seq(
   let('x', Car()),
