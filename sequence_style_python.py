@@ -1,27 +1,34 @@
 
-# Eric Huber 20190706
+# Sequence-Style Python
+# Eric Huber
 # https://github.com/echuber2/random_examples
 
+# v0.0: 20190706
+# v0.1: 20190707
+
 # Another attempt at a sequencing function that could be used in a lambda.
-# The "pipe" function gets or sets the pipe_ global variable. This only
+# The "pipe" function gets or sets the _pipe_ global variable. This only
 # works if arguments to seq() are evaluated from left to right, which isn't
 # guaranteed until Python 3.8. Version 3.8 may also introduce assignment
 # expressions that could replace the global dictionary for other variables.
 # Refer to: https://www.python.org/dev/peps/pep-0572/
 
 # init
-pipe_ = None
-cond_ = None
+_pipe_ = None
+_cond_ = None
 
 # let('x', 3) sets the global x to 3
 def let(var_name_string, val):
   globals()[var_name_string] = val
 
-# let('x', 'y', 3) sets the global x[y] to 3
+# letkey('x', 'y', 3) sets the global x[y] to 3
 def letkey(var_name_string, key_name_string, val):
   globals()[var_name_string][key_name_string] = val
 
-# Synonym for letkey, meant for list indices. Works the same way through duck-typing.
+# letind('mylist', 1, 7) sets mylist[1] to 7.
+# The second parameter should be a list index integer. This is actually
+# defined as a synonym for letkey, and it still works as intended because
+# of duck typing.
 letind = letkey
 
 # If car is an object with attribute color (car.color), then you can do this:
@@ -29,31 +36,33 @@ letind = letkey
 def letattr(var_name_string, prop_name_string, val):
   setattr(globals()[var_name_string], prop_name_string, val)
 
-# Get or set the pipe variable. Don't pass more than one argument.
+# Get or set the pipe variable. (Don't pass more than one argument.)
+# Examples;
+#  pipe(1) sets the pipe variable to 1.
+#  pipe() gets the pipe variable.
 def pipe(*args):
-  global pipe_
+  global _pipe_
   for arg in args:
-    pipe_ = arg
-  return pipe_
+    _pipe_ = arg
+  return _pipe_
 
 # Pass arguments that are expressions you'd like to evaluate in order.
 # This should work, but not guaranteed until Python 3.8
 def seq(*args):
-  return pipe()
+  return _pipe_
 
 # Get or set the condition boolean. Don't pass more than one argument.
 def cond(*args):
-  global cond_
+  global _cond_
   for arg in args:
-    cond_ = bool(arg)
-  return cond_
+    _cond_ = bool(arg)
+  return _cond_
 
-# Evaluate either the true or the false branch, depending on cond_.
+# Evaluate either the true or the false branch, depending on _cond_.
 # Note that t and f MUST be lambda-lifted expressions or functions.
 # This is necessary to avoid evaluating both branches.
-def branch(true_lambda,false_lambda):
-  global cond_
-  return true_lambda() if cond_ else false_lambda()
+def branch(true_lambda, false_lambda):
+  return true_lambda() if _cond_ else false_lambda()
 
 # While loop: As long as cond_lambda evaluates true, body_lambda will be
 # called again. Both arguments must be lambda-lifted.
@@ -65,27 +74,95 @@ def whi(cond_lambda, body_lambda):
 
 # EXAMPLES
 
+# Below, I define some variables in the middle of a seq call.
+# If you have a linter or IDE, and they show you an error message
+# about undefined variables, you can pre-declare any variables
+# just to make the messages go away. However, it should work in
+# execution regardless.
+x = None # optional
+y = None # optional
+z = None # optional
+i = None # optional
+
 # Note: One fun side effect of writing this way, is your whitespace on the
 # left doesn't seem to matter much. Tabless Python?
-seq(pipe(10), whi(
+seq(print('Example with a while loop: Counting down from 10...'),
+  pipe(10),
+  whi(
       lambda: pipe() > 0,
       lambda: seq(
-        print('Running body because >0:', pipe()),
+        print('[In body] Still >0:', pipe(), 'Decrementing...'),
         pipe(pipe()-1)
-        )
-    ), print("Final:", pipe()))
+      )
+    ), print("Final:", pipe(), '\n'))
 
-seq(print('Math lesson:'), cond(2+2==4), branch(
+seq(print('Example with a conditional branch:\nMath lesson:'), cond(2+2==4), branch(
       lambda: print('Yeah, 2+2==4'),
-      lambda: print('No, 2+2==5') 
-    ), print("Now you know!"))
+      lambda: print('No, 2+2==5')
+    ), print("Now you know!", '\n'))
 
-# Here I define variables x, y, and z in the middle of the call. If you
-# have a linter or IDE, it will complain, but this still works!
-# (Also, all of this is in a lambda, which was originally the point.)
-foo = lambda: seq(print('Setting x to 7'), let('x', 7), print('Setting y to 9'),
+# All of this can be put in a lambda, which was originally the point of
+# trying to do it. This way you can put pretty arbitrary things in lambdas,
+# even with branching and assignments.
+foo = lambda: seq(print('Example with sequenced assignments:'),
+  print('Setting x to 7'), let('x', 7), print('Setting y to 9'),
   let('y',9), print('Setting z to the sum'), let('z',x+y),
-  print('Value of z:', z))
+  print('Value of z:', z, '\n'))
+# seq always returns _pipe_, so if we didn't use pipe or don't care,
+# just assign it to underscore to throw it away. Here, we only care
+# about the side-effects (assigning a variable, printing a message).
+_ = foo()
 
-foo()
+# Some unit tests that also show example usage:
 
+let_test = lambda: seq(
+   let('x','Success!'),
+   print('Testing let:', x, '\n')
+)
+_ = let_test()
+
+letkey_test = lambda: seq(
+   let('x', {}),
+   letkey('x','y','Success!'),
+   print('Testing letkey:', x['y'], '\n')
+ )
+_ = letkey_test()
+
+letind_test = lambda: seq(
+   let('x', [0,0,0]),
+   # Instead of making an iteration variable 'i' here and adding junk
+   # to the global namespace, you could also just use the pipe variable.
+   let('i', 0),
+   whi(lambda: i < len(x), lambda: seq(
+       letind('x', i, 7),
+       let('i', i+1)
+     )
+   ),
+   pipe('Testing letind:'),
+   cond(x == [7,7,7]),
+   branch(
+     lambda: print(pipe(), 'Success!'),
+     lambda: print(pipe(), 'Failure!')
+   ),
+   print()
+ )
+_ = letind_test()
+
+# You can define a class in the seq format using the built-in Python
+# functions, but it's a pain.
+class Car:
+  def __init__(self):
+    color = 'blue'
+
+letattr_test = lambda: seq(
+  let('x', Car()),
+  letattr('x', 'color', 'green'),
+  pipe('Testing letattr:'),
+  cond(x.color == 'green'),
+  branch(
+    lambda: print(pipe(), 'Success!'),
+    lambda: print(pipe(), 'Failure!')
+  ),
+  print()
+)
+_ = letattr_test()
